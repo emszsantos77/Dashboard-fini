@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Fini | Sales Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- CSS Frameworks -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
+  <style>
+    :root {
+      --primary: #6366f1;
+      --secondary: #ec4899;
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+    }
+
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: var(--bg); 
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Moderna */
+    .sidebar { 
+      width: 280px; 
+      position: fixed; 
+      top: 0; bottom: 0; left: 0; 
+      padding: 24px; 
+      background: var(--card-bg); 
+      border-right: 1px solid #e5e7eb; 
+      z-index: 1000;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.02);
+    }
+
+    .main-content { margin-left: 280px; padding: 40px; }
+
+    /* Cards de Métricas */
+    .metric-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      border: none;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .metric-card:hover { transform: translateY(-5px); }
+    
+    .metric-card::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--primary);
+    }
+
+    .metric-card.alt::after { background: var(--secondary); }
+
+    .metric-label { color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .metric-value { font-size: 1.75rem; font-weight: 700; margin-top: 8px; color: var(--text-main); }
+    .metric-icon { position: absolute; right: 20px; top: 20px; color: #e5e7eb; font-size: 1.5rem; }
+
+    /* Gráficos e Tabelas */
+    .glass-panel {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+      margin-bottom: 30px;
+    }
+
+    .section-title { font-weight: 700; font-size: 1.25rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 10px; }
+
+    /* Estilo Choices.js */
+    .choices__inner { border-radius: 10px !important; border: 1px solid #e5e7eb !important; background: #fff !important; }
+
+    /* Botão baixar relatório */
+    #btn-download {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="text-center mb-4">
+        <h4 style="font-weight: 800; color: var(--primary);">FINI <span style="color: var(--secondary);">DASH</span></h4>
+        <p class="text-muted small">Sales Intelligence v2.0</p>
+    </div>
+    
+    <div class="filters">
+      <div class="mb-4">
+        <label class="form-label small fw-bold">PERÍODO (ANO)</label>
+        <select id="filter-ano" multiple></select>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label small fw-bold">PERÍODO (MÊS)</label>
+        <select id="filter-mes" multiple></select>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label small fw-bold">GERÊNCIA</label>
+        <select id="filter-gerente" multiple></select>
+      </div>
+      <div class="mb-4">
+        <label class="form-label small fw-bold">SUPERVISÃO</label>
+        <select id="filter-supervisor" multiple></select>
+      </div>
+      <div class="mb-4">
+        <label class="form-label small fw-bold">VENDEDOR</label>
+        <select id="filter-vendedor" multiple></select>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label small fw-bold">GRUPO</label>
+        <select id="filter-grupo" multiple></select>
+      </div>
+      
+      <button id="btn-reset" class="btn btn-light w-100 border mt-2" style="border-radius: 10px;">
+        <i class="fa-solid fa-rotate-left me-2"></i>Limpar Filtros
+      </button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <header class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold m-0">Performance de Vendas</h2>
+            <p class="text-muted">Análise dinâmica de faturamento e positivação</p>
+        </div>
+        <div id="last-update" class="badge bg-white text-dark border p-2" style="border-radius: 8px;">
+            <i class="fa-regular fa-calendar me-2"></i> Dados Atualizados
+        </div>
+    </header>
+
+    <!-- Botão para baixar relatório -->
+    <button id="btn-download" class="btn btn-primary mb-4">
+      <i class="fa-solid fa-download me-2"></i>BAIXAR RELATÓRIO
+    </button>
+
+    <!-- Métricas Principais (OBS: removido cartão "Média p/ Nota") -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-4">
+        <div class="metric-card">
+          <i class="fa-solid fa-chart-line metric-icon"></i>
+          <div class="metric-label">Faturamento Total</div>
+          <div class="metric-value" id="total-faturamento">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="metric-card alt">
+          <i class="fa-solid fa-users metric-icon"></i>
+          <div class="metric-label">Positivação Média (6 meses)</div>
+          <div class="metric-value" id="media-positivacao">0</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="metric-card">
+          <i class="fa-solid fa-ticket metric-icon"></i>
+          <div class="metric-label">Ticket Médio</div>
+          <div class="metric-value" id="ticket-medio">R$ 0,00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico de Evolução -->
+    <div class="glass-panel">
+      <div class="section-title">
+        <i class="fa-solid fa-arrow-trend-up text-primary"></i> Evolução Mensal MoM
+      </div>
+      <div id="evolucao-chart" style="height:400px;"></div>
+    </div>
+
+    <!-- Tabela de Vendedores -->
+    <div class="glass-panel">
+      <div class="section-title">
+        <i class="fa-solid fa-ranking-star text-secondary"></i> Ranking de Performance por Vendedor
+      </div>
+      <div class="table-responsive">
+        <table id="table-vendedores" class="table table-hover w-100">
+          <thead>
+            <tr>
+              <th>Cod</th>
+              <th>Vendedor</th>
+              <th>Supervisor</th>
+              <th>Gerente</th>
+              <th>Total Venda</th>
+              <th>Positivação</th>
+              <th>Média Mensal</th>
+              <th>Posit. Média</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script>
+(async function() {
+  const DATA_PATH = './Dados/fini_data.json';
+  const MONTHS_FIXED = 6; // dividir por 6 conforme solicitado
+
+  let rawData = [];
+  const choicesInstances = {};
+  const fmtCurrency = v => isNaN(v) ? 'R$ 0,00' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const fmtNumber = v => isNaN(v) ? '0' : v.toLocaleString('pt-BR');
+
+  // Carrega JSON
+  try {
+    const resp = await fetch(DATA_PATH);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    rawData = await resp.json();
+  } catch (err) {
+    console.error('Erro ao carregar JSON:', err);
+    alert('Erro ao carregar Dados/fini_data.json. Confirme que o JSON existe e que você está servindo via http://localhost:8000');
+    return;
+  }
+
+  // Enriquecer dados (datas e valores)
+  rawData.forEach(r => {
+    const d = r['Emissão'] ? new Date(r['Emissão']) : null;
+    r._date = d;
+    r.Ano = d ? d.getFullYear() : null;
+    r.Mes = d ? (d.getMonth() + 1) : null;
+    r.Mes_Ano = d ? d.toISOString().slice(0,7) : null; // YYYY-MM
+    r.VlrTotal = Number(r['Vlr. Total'] || 0);
+  });
+
+  // util: uniq + ordenação
+  const uniqSorted = (arr, numeric = false) => {
+    const s = [...new Set(arr.filter(x => x !== null && x !== undefined))];
+    return s.sort((a,b) => numeric ? a - b : (''+a).localeCompare(''+b));
+  };
+
+  // Helper para inicializar Choices.js
+  function initChoices(id, values) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    values.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.text = v;
+      el.appendChild(opt);
+    });
+    choicesInstances[id] = new Choices(el, {
+      removeItemButton: true,
+      placeholderValue: 'Todos',
+      searchPlaceholderValue: 'Buscar...'
+    });
+    el.addEventListener('change', updateDashboard);
+  }
+
+  // Popular filtros (ordem: ano, mes, gerencia, supervisao, vendedor, grupo)
+  initChoices('filter-ano', uniqSorted(rawData.map(r => r.Ano).filter(x => x), true));
+  initChoices('filter-mes', uniqSorted(rawData.map(r => r.Mes).filter(x => x), true));
+  initChoices('filter-gerente', uniqSorted(rawData.map(r => r.GERENTE)));
+  initChoices('filter-supervisor', uniqSorted(rawData.map(r => r.SUPERVISOR)));
+  initChoices('filter-vendedor', uniqSorted(rawData.map(r => r['Nome Vendedor'])));
+  initChoices('filter-grupo', uniqSorted(rawData.map(r => r.Grupo)));
+
+  // mostrar hora de carregamento
+  const lastUpdateEl = document.getElementById('last-update');
+  if (lastUpdateEl) lastUpdateEl.innerText = 'Dados carregados: ' + new Date().toLocaleString();
+
+  let dataTable = null;
+  let currentRows = [];
+
+  function updateDashboard() {
+    // valores selecionados
+    const getVals = id => choicesInstances[id] ? choicesInstances[id].getValue(true) : [];
+    const fAno = getVals('filter-ano'), fMes = getVals('filter-mes'), fGrupo = getVals('filter-grupo'),
+          fGer = getVals('filter-gerente'), fSup = getVals('filter-supervisor'), fVen = getVals('filter-vendedor');
+
+    // aplicar filtros
+    const df = rawData.filter(r => {
+      if (fAno.length && !fAno.includes(String(r.Ano))) return false;
+      if (fMes.length && !fMes.includes(String(r.Mes))) return false;
+      if (fGrupo.length && !fGrupo.includes(r.Grupo)) return false;
+      if (fGer.length && !fGer.includes(r.GERENTE)) return false;
+      if (fSup.length && !fSup.includes(r.SUPERVISOR)) return false;
+      if (fVen.length && !fVen.includes(r['Nome Vendedor'])) return false;
+      return true;
+    });
+
+    // CARDS
+    const totalVenda = df.reduce((s, r) => s + (r.VlrTotal || 0), 0);
+    const uniqueNF = [...new Set(df.map(r => r.NF).filter(x => x))].length;
+    const mediaMensalTotal = totalVenda / MONTHS_FIXED;
+
+    // Positivação média conforme regra: somar contagem distinta por mês e dividir por 6
+    const monthMap = {};
+    df.forEach(r => {
+      const m = r.Mes_Ano || 'unknown';
+      if (!monthMap[m]) monthMap[m] = new Set();
+      if (r.Cnpj_CPF) monthMap[m].add(r.Cnpj_CPF);
+    });
+    const somaDistinctMeses = Object.values(monthMap).reduce((acc, s) => acc + s.size, 0);
+    const mediaPositivacao = somaDistinctMeses / MONTHS_FIXED;
+
+    // atualizar DOM dos cards (preservando ids e layout)
+    const elTotal = document.getElementById('total-faturamento');
+    const elMediaPos = document.getElementById('media-positivacao');
+    const elTicket = document.getElementById('ticket-medio');
+    if (elTotal) elTotal.innerText = fmtCurrency(totalVenda);
+    if (elMediaPos) elMediaPos.innerText = Math.round(mediaPositivacao);
+    if (elTicket) elTicket.innerText = fmtCurrency(uniqueNF ? (totalVenda / uniqueNF) : 0);
+
+    // GRÁFICO EVOLUÇÃO (por mês)
+    const evoMap = {};
+    df.forEach(r => {
+      const m = r.Mes_Ano || 'unknown';
+      if (!evoMap[m]) evoMap[m] = { v: 0, c: new Set() };
+      evoMap[m].v += (r.VlrTotal || 0);
+      if (r.Cnpj_CPF) evoMap[m].c.add(r.Cnpj_CPF);
+    });
+    const months = Object.keys(evoMap).sort();
+    const evoTotals = months.map(m => evoMap[m].v);
+    const evoPos = months.map(m => evoMap[m].c.size);
+
+    const tracePos = { x: months, y: evoPos, name: 'Positivação (clientes)', type: 'bar', marker: { color: '#fbcfe8' } };
+    const traceVenda = { x: months, y: evoTotals, name: 'Vendas (R$)', type: 'scatter', mode: 'lines+markers', yaxis: 'y2', line: { color: '#6366f1' } };
+
+    Plotly.newPlot('evolucao-chart', [tracePos, traceVenda], {
+      margin: { t: 10, b: 60, l: 60, r: 60 },
+      xaxis: { title: 'Mês/Ano' },
+      yaxis: { title: 'Clientes' },
+      yaxis2: { title: 'Vendas (R$)', overlaying: 'y', side: 'right' },
+      legend: { orientation: 'h', y: -0.2 }
+    }, { responsive: true, displayModeBar: false });
+
+    // TABELA: ranking por vendedor
+    const vendMap = {};
+    df.forEach(r => {
+      const name = r['Nome Vendedor'] || 'SEM NOME';
+      if (!vendMap[name]) vendMap[name] = { cod: r.Vendedor, sup: r.SUPERVISOR, ger: r.GERENTE, total: 0, cnpjSet: new Set() };
+      vendMap[name].total += (r.VlrTotal || 0);
+      if (r.Cnpj_CPF) vendMap[name].cnpjSet.add(r.Cnpj_CPF);
+    });
+
+    const rows = Object.keys(vendMap).map(name => {
+      const v = vendMap[name];
+      const totalPositivacao = v.cnpjSet.size; // contagem distinta total de Cnpj_CPF para o vendedor (todos meses)
+      const mediaMensalVenda = v.total / MONTHS_FIXED; // média fixa /6
+      return {
+        cod: v.cod || '',
+        vendedor: name,
+        supervisor: v.sup || '',
+        gerente: v.ger || '',
+        totalVenda: v.total || 0,
+        totalPos: totalPositivacao,
+        mediaMensalVenda: mediaMensalVenda,
+        positMedia: Math.round(totalPositivacao / MONTHS_FIXED) // arredondado inteiro
+      };
+    });
+
+    rows.sort((a, b) => b.totalVenda - a.totalVenda);
+
+    // salvar linhas atuais para exportação
+    currentRows = rows;
+
+    // preencher tabela
+    const tbody = $('#table-vendedores tbody');
+    tbody.empty();
+    rows.forEach(r => {
+      tbody.append(`<tr>
+        <td><small class="text-muted">${r.cod}</small></td>
+        <td><strong>${r.vendedor}</strong></td>
+        <td>${r.supervisor}</td>
+        <td>${r.gerente}</td>
+        <td style="color:#0ea5a4;font-weight:700">${fmtCurrency(r.totalVenda)}</td>
+        <td><span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#06b6d4;color:#fff;font-weight:700">${r.totalPos}</span></td>
+        <td>${fmtCurrency(r.mediaMensalVenda)}</td>
+        <td style="font-weight:700">${r.positMedia}</td>
+      </tr>`);
+    });
+
+    if (dataTable) dataTable.destroy();
+    dataTable = $('#table-vendedores').DataTable({
+      pageLength: 10,
+      order: [[4, 'desc']],
+      language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+      dom: 'tip'
+    });
+  }
+
+  // botão reset
+  const btnReset = document.getElementById('btn-reset');
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      Object.values(choicesInstances).forEach(c => c.removeActiveItems?.());
+      updateDashboard();
+    });
+  }
+
+  // botão baixar relatório Excel
+  const btnDownload = document.getElementById('btn-download');
+  btnDownload.addEventListener('click', () => {
+    if (!currentRows.length) {
+      alert('Nenhum dado para exportar.');
+      return;
+    }
+    // Criar worksheet e workbook
+    const ws_data = [
+      ['Cod', 'Vendedor', 'Supervisor', 'Gerente', 'Total Venda', 'Positivação', 'Média Mensal', 'Posit. Média']
+    ];
+    currentRows.forEach(r => {
+      ws_data.push([
+        r.cod,
+        r.vendedor,
+        r.supervisor,
+        r.gerente,
+        r.totalVenda,
+        r.totalPos,
+        r.mediaMensalVenda,
+        r.positMedia
+      ]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ranking Vendedores');
+
+    // Gerar arquivo e disparar download
+    XLSX.writeFile(wb, 'relatorio_fini_vendedores.xlsx');
+  });
+
+  // primeira carga
+  updateDashboard();
+
+})();
+</script>
+</body>
+</html>
