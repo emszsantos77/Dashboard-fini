@@ -26,23 +26,28 @@
     body { font-family: 'Inter', sans-serif; background: var(--bg); color:var(--text-main); overflow-x:hidden; }
 
     /* Sidebar */
-    .sidebar { width: 280px; position: fixed; top:0; bottom:0; left:0; padding:24px; background:var(--card-bg); border-right:1px solid #e5e7eb; z-index:1050; box-shadow:4px 0 10px rgba(0,0,0,0.02); transition: all .3s; }
+    .sidebar { width: 280px; position: fixed; top:0; bottom:0; left:0; padding:24px; background:var(--card-bg); border-right:1px solid #e5e7eb; z-index:1050; box-shadow:4px 0 10px rgba(0,0,0,0.02); transition: all .32s ease; }
     .main-content { margin-left: 280px; padding: 40px; transition: all .3s; }
 
-    /* Mobile behavior */
+    /* Mobile behavior: hide sidebar and show toggle */
     @media (max-width: 991.98px) {
-      .sidebar { left:-280px; }
+      .sidebar { left:-320px; width:320px; }
       .sidebar.active { left:0; }
       .main-content { margin-left:0; padding:20px; }
       .menu-toggle { display:block; }
     }
 
-    .menu-toggle { display:none; position:fixed; top:15px; right:15px; z-index:1100; background:var(--primary); color:white; border:none; border-radius:8px; padding:10px 14px; box-shadow:0 4px 6px rgba(0,0,0,0.1); }
-    .sidebar-overlay { display:none; position:fixed; inset:0; background: rgba(0,0,0,0.5); z-index:1040; }
+    /* Menu toggle: circular, top-left (mobile) */
+    .menu-toggle { display:none; position: fixed; top: 14px; left: 14px; z-index:1400; background:var(--primary); color:white; border:none; border-radius:50%; width:46px; height:46px; box-shadow:0 6px 14px rgba(0,0,0,0.14); display:flex; align-items:center; justify-content:center; }
+    .menu-toggle .fa-bars { font-size:18px; }
+    .menu-toggle:focus { outline: 3px solid rgba(99,102,241,0.2); }
+
+    /* Overlay for closing sidebar on mobile */
+    .sidebar-overlay { display:none; position:fixed; inset:0; background: rgba(0,0,0,0.45); z-index:1030; transition: opacity .2s; }
     .sidebar-overlay.active { display:block; }
 
     /* Cards */
-    .metric-card { background:var(--card-bg); border-radius:16px; padding:20px; box-shadow:0 4px 6px rgba(0,0,0,0.06); position:relative; overflow:hidden; }
+    .metric-card { background:var(--card-bg); border-radius:16px; padding:20px; box-shadow:0 4px 6px rgba(0,0,0,0.06); position:relative; overflow:hidden; min-height:88px; }
     .metric-card::after { content:""; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--primary); }
     .metric-card.alt::after { background:var(--secondary); }
     .metric-label { color:var(--text-muted); font-weight:600; font-size:.85rem; text-transform:uppercase; }
@@ -50,22 +55,36 @@
 
     .glass-panel { background:var(--card-bg); border-radius:16px; padding:20px; box-shadow:0 10px 15px rgba(0,0,0,0.04); margin-bottom:24px; }
 
-    .choices__inner { border-radius:10px !important; border:1px solid #e5e7eb !important; background:#fff !important; }
+    .choices__inner { border-radius:10px !important; border:1px solid #e5e7eb !important; background:#fff !important; min-height:44px; }
+
+    /* Make chart & table responsive and allow horizontal scroll on small screens */
+    #evolucao-chart { width:100%; max-width:100%; }
+    .table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+    /* small visual tweaks for mobile spacing */
+    @media (max-width: 576px) {
+      .metric-value { font-size:1.25rem; }
+      .menu-toggle { width:44px; height:44px; top:10px; left:10px; }
+    }
   </style>
 </head>
 <body>
 
   <!-- Menu toggle (mobile) -->
-  <button id="menu-toggle" class="menu-toggle"><i class="fa-solid fa-bars"></i> Filtros</button>
-  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <button id="menu-toggle" class="menu-toggle" aria-label="Abrir filtros" title="Filtros">
+    <i class="fa-solid fa-bars"></i>
+  </button>
 
-  <div id="sidebar" class="sidebar">
+  <!-- Overlay -->
+  <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+  <div id="sidebar" class="sidebar" role="navigation" aria-label="Filtros">
     <div class="text-center mb-4">
-      <h4 style="font-weight:800; color:var(--primary)">FINI <span style="color:var(--secondary)">DASH</span></h4>
-      <p class="text-muted small">Sales Intelligence v2.0</p>
+      <h4 style="font-weight:800; color:var(--primary); margin-bottom:0">FINI <span style="color:var(--secondary)">DASH</span></h4>
+      <p class="text-muted small mb-0">Sales Intelligence v2.0</p>
     </div>
 
-    <div class="filters">
+    <div class="filters mt-3">
       <div class="mb-3">
         <label class="form-label small fw-bold">PERÍODO (ANO)</label>
         <select id="filter-ano" multiple></select>
@@ -91,35 +110,39 @@
         <select id="filter-grupo" multiple></select>
       </div>
 
-      <button id="btn-reset" class="btn btn-light w-100 border mt-2" style="border-radius:10px;"><i class="fa-solid fa-rotate-left me-2"></i>Limpar Filtros</button>
+      <button id="btn-reset" class="btn btn-light w-100 border mt-2" style="border-radius:10px;">
+        <i class="fa-solid fa-rotate-left me-2"></i>Limpar Filtros
+      </button>
     </div>
   </div>
 
   <div class="main-content">
-    <header class="d-flex justify-content-between align-items-center mb-4">
-      <div>
+    <header class="d-flex justify-content-between align-items-start mb-3">
+      <div style="max-width:70%">
         <h2 class="fw-bold m-0">Performance de Vendas</h2>
-        <p class="text-muted">Análise dinâmica de faturamento e positivação</p>
+        <p class="text-muted mb-0" style="font-size:0.95rem">Análise dinâmica de faturamento e positivação</p>
       </div>
-      <div id="last-update" class="badge bg-white text-dark border p-2" style="border-radius:8px;"><i class="fa-regular fa-calendar me-2"></i> Dados</div>
+      <div id="last-update" class="badge bg-white text-dark border p-2" style="border-radius:8px; margin-left:10px;">
+        <i class="fa-regular fa-calendar me-2"></i> Dados
+      </div>
     </header>
 
     <button id="btn-download" class="btn btn-primary mb-4"><i class="fa-solid fa-download me-2"></i>BAIXAR RELATÓRIO</button>
 
     <div class="row g-4 mb-4">
-      <div class="col-md-4">
+      <div class="col-12 col-md-4">
         <div class="metric-card">
           <div class="metric-label">Faturamento Total</div>
           <div class="metric-value" id="total-faturamento">R$ 0,00</div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-12 col-md-4">
         <div class="metric-card alt">
           <div class="metric-label">Positivação Média (6 meses)</div>
           <div class="metric-value" id="media-positivacao">0</div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-12 col-md-4">
         <div class="metric-card">
           <div class="metric-label">Ticket Médio</div>
           <div class="metric-value" id="ticket-medio">R$ 0,00</div>
@@ -128,7 +151,7 @@
     </div>
 
     <div class="glass-panel">
-      <div class="section-title mb-3"><i class="fa-solid fa-arrow-trend-up text-primary me-2"></i> Evolução Mensal MoM</div>
+      <div class="section-title mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i> Evolução Mensal MoM</div>
       <div id="evolucao-chart" style="height:360px;"></div>
     </div>
 
@@ -163,7 +186,7 @@
 
 <script>
 (async function(){
-  const DATA_PATH = './dados/fini_data.json'; // certifique-se que a pasta no repo/deploy é 'dados' (minúsculo)
+  const DATA_PATH = './dados/fini_data.json'; // ajuste se necessário (Dados vs dados)
   const MONTHS_FIXED = 6;
 
   let rawData = [];
@@ -189,11 +212,9 @@
     r._date = r.Emissão ? new Date(r.Emissão) : null;
     r.Ano = r._date ? r._date.getFullYear() : null;
     r.Mes = r._date ? (r._date.getMonth()+1) : null;
-    r.Mes_Ano = r._date ? r.Emissão.slice(0,7) : null; // YYYY-MM (supondo Emissão = YYYY-MM-DD)
+    r.Mes_Ano = r._date ? (r.Emissão ? r.Emissão.slice(0,7) : null) : null;
     r.VlrTotal = Number(r['Vlr. Total'] || 0);
-    // garantir chave de CNPJ/CPF limpa
     r.Cnpj_CPF = r.Cnpj_CPF ? String(r.Cnpj_CPF).trim() : null;
-    // garantir nome vendedor
     r['Nome Vendedor'] = r['Nome Vendedor'] ? String(r['Nome Vendedor']).trim() : '';
     r.Vendedor = r.Vendedor ? String(r.Vendedor).trim() : '';
   });
@@ -217,12 +238,21 @@
     choicesInstances[id] = new Choices(el, {
       removeItemButton: true,
       placeholderValue: 'Todos',
-      searchPlaceholderValue: 'Buscar...'
+      searchPlaceholderValue: 'Buscar...',
+      shouldSort: false
     });
-    el.addEventListener('change', updateDashboard);
+    // fechar menu mobile ao selecionar (melhora UX)
+    el.addEventListener('change', () => {
+      // atualiza resultados
+      updateDashboard();
+      // se mobile, fecha o menu automaticamente
+      if(window.innerWidth < 992){
+        closeSidebar();
+      }
+    });
   }
 
-  // Popular filtros (ano, mes, gerencia, supervisao, vendedor, grupo)
+  // Popular filtros
   initChoices('filter-ano', uniqSorted(rawData.map(r => r.Ano).filter(x => x), true), true);
   initChoices('filter-mes', uniqSorted(rawData.map(r => r.Mes).filter(x => x), true), true);
   initChoices('filter-gerente', uniqSorted(rawData.map(r => r.GERENTE)));
@@ -234,13 +264,13 @@
   const lastUpdateEl = document.getElementById('last-update');
   if(lastUpdateEl) lastUpdateEl.innerText = 'Dados carregados: ' + new Date().toLocaleString();
 
-  function updateDashboard(){
-    const getVals = id => choicesInstances[id] ? choicesInstances[id].getValue(true) : [];
-    const fAno = getVals('filter-ano'), fMes = getVals('filter-mes'),
-          fGer = getVals('filter-gerente'), fSup = getVals('filter-supervisor'),
-          fVen = getVals('filter-vendedor'), fGrupo = getVals('filter-grupo');
+  function getFilterValues(id){ return choicesInstances[id] ? choicesInstances[id].getValue(true) : []; }
 
-    // Aplicar filtros
+  function updateDashboard(){
+    const fAno = getFilterValues('filter-ano'), fMes = getFilterValues('filter-mes'),
+          fGer = getFilterValues('filter-gerente'), fSup = getFilterValues('filter-supervisor'),
+          fVen = getFilterValues('filter-vendedor'), fGrupo = getFilterValues('filter-grupo');
+
     const df = rawData.filter(r => {
       if(fAno.length && !fAno.includes(String(r.Ano))) return false;
       if(fMes.length && !fMes.includes(String(r.Mes))) return false;
@@ -305,7 +335,7 @@
 
     const rows = Object.keys(vendMap).map(name => {
       const v = vendMap[name];
-      const totalPositivacao = v.cnpjSet.size; // contagem distinta total (todos meses)
+      const totalPositivacao = v.cnpjSet.size;
       const mediaMensalVenda = v.total / MONTHS_FIXED;
       return {
         cod: v.cod || '',
@@ -315,7 +345,7 @@
         totalVenda: v.total || 0,
         totalPos: totalPositivacao,
         mediaMensalVenda: mediaMensalVenda,
-        positMedia: Math.round(totalPositivacao / MONTHS_FIXED) // arredondado inteiro
+        positMedia: (totalPositivacao / MONTHS_FIXED).toFixed(2)
       };
     });
 
@@ -347,12 +377,23 @@
     });
   } // end updateDashboard
 
-  // Inicialização de botões e choices
+  // Sidebar control functions
+  const menuBtn = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+
+  function openSidebar(){ sidebar.classList.add('active'); overlay.classList.add('active'); overlay.setAttribute('aria-hidden','false'); menuBtn.setAttribute('aria-pressed','true'); }
+  function closeSidebar(){ sidebar.classList.remove('active'); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); menuBtn.setAttribute('aria-pressed','false'); }
+  function toggleSidebar(){ sidebar.classList.contains('active') ? closeSidebar() : openSidebar(); }
+
   function setupUI(){
     // botão reset
     document.getElementById('btn-reset').addEventListener('click', ()=>{
-      Object.values(choicesInstances).forEach(c => c.removeActiveItems?.());
+      Object.values(choicesInstances).forEach(c => {
+        try { c.clearStore?.(); c.removeActiveItems?.(); } catch(e){}
+      });
       updateDashboard();
+      if(window.innerWidth < 992) closeSidebar();
     });
 
     // botão download (gera excel com a tabela atual)
@@ -368,13 +409,21 @@
       XLSX.writeFile(wb, 'relatorio_fini_vendedores.xlsx');
     });
 
-    // menu mobile
-    const menuBtn = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    function toggleMenu(){ sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
-    menuBtn.addEventListener('click', toggleMenu);
-    overlay.addEventListener('click', toggleMenu);
+    // menu mobile handlers
+    menuBtn.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', closeSidebar);
+
+    // Close sidebar if window resized to desktop
+    window.addEventListener('resize', () => {
+      if(window.innerWidth >= 992) {
+        closeSidebar();
+      }
+    });
+
+    // Close when selecting an option inside Choices (already added on initChoices), but also support clicking any filter element
+    document.querySelectorAll('#sidebar select').forEach(s => {
+      s.addEventListener('change', () => { if(window.innerWidth < 992) closeSidebar(); });
+    });
   }
 
   setupUI();
