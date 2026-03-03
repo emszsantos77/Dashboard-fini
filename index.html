@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <title>Fini | Sales Intelligence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  
-  <!-- Google Fonts & Icons -->
+
+  <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- CSS Frameworks -->
+
+  <!-- CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
@@ -23,177 +23,117 @@
       --text-main: #1f2937;
       --text-muted: #6b7280;
     }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color:var(--text-main); overflow-x:hidden; }
 
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background-color: var(--bg); 
-      color: var(--text-main);
-      overflow-x: hidden;
+    /* Sidebar */
+    .sidebar { width: 280px; position: fixed; top:0; bottom:0; left:0; padding:24px; background:var(--card-bg); border-right:1px solid #e5e7eb; z-index:1050; box-shadow:4px 0 10px rgba(0,0,0,0.02); transition: all .3s; }
+    .main-content { margin-left: 280px; padding: 40px; transition: all .3s; }
+
+    /* Mobile behavior */
+    @media (max-width: 991.98px) {
+      .sidebar { left:-280px; }
+      .sidebar.active { left:0; }
+      .main-content { margin-left:0; padding:20px; }
+      .menu-toggle { display:block; }
     }
 
-    /* Sidebar Moderna */
-    .sidebar { 
-      width: 280px; 
-      position: fixed; 
-      top: 0; bottom: 0; left: 0; 
-      padding: 24px; 
-      background: var(--card-bg); 
-      border-right: 1px solid #e5e7eb; 
-      z-index: 1000;
-      box-shadow: 4px 0 10px rgba(0,0,0,0.02);
-    }
+    .menu-toggle { display:none; position:fixed; top:15px; right:15px; z-index:1100; background:var(--primary); color:white; border:none; border-radius:8px; padding:10px 14px; box-shadow:0 4px 6px rgba(0,0,0,0.1); }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background: rgba(0,0,0,0.5); z-index:1040; }
+    .sidebar-overlay.active { display:block; }
 
-    .main-content { margin-left: 280px; padding: 40px; }
+    /* Cards */
+    .metric-card { background:var(--card-bg); border-radius:16px; padding:20px; box-shadow:0 4px 6px rgba(0,0,0,0.06); position:relative; overflow:hidden; }
+    .metric-card::after { content:""; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--primary); }
+    .metric-card.alt::after { background:var(--secondary); }
+    .metric-label { color:var(--text-muted); font-weight:600; font-size:.85rem; text-transform:uppercase; }
+    .metric-value { font-size:1.6rem; font-weight:700; color:var(--text-main); margin-top:.5rem; }
 
-    /* Cards de Métricas */
-    .metric-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 24px;
-      border: none;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .metric-card:hover { transform: translateY(-5px); }
-    
-    .metric-card::after {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; width: 4px; height: 100%;
-      background: var(--primary);
-    }
+    .glass-panel { background:var(--card-bg); border-radius:16px; padding:20px; box-shadow:0 10px 15px rgba(0,0,0,0.04); margin-bottom:24px; }
 
-    .metric-card.alt::after { background: var(--secondary); }
-
-    .metric-label { color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .metric-value { font-size: 1.75rem; font-weight: 700; margin-top: 8px; color: var(--text-main); }
-    .metric-icon { position: absolute; right: 20px; top: 20px; color: #e5e7eb; font-size: 1.5rem; }
-
-    /* Gráficos e Tabelas */
-    .glass-panel {
-      background: var(--card-bg);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-      margin-bottom: 30px;
-    }
-
-    .section-title { font-weight: 700; font-size: 1.25rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 10px; }
-
-    /* Estilo Choices.js */
-    .choices__inner { border-radius: 10px !important; border: 1px solid #e5e7eb !important; background: #fff !important; }
-
-    /* Botão baixar relatório */
-    #btn-download {
-      margin-bottom: 20px;
-    }
+    .choices__inner { border-radius:10px !important; border:1px solid #e5e7eb !important; background:#fff !important; }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
+  <!-- Menu toggle (mobile) -->
+  <button id="menu-toggle" class="menu-toggle"><i class="fa-solid fa-bars"></i> Filtros</button>
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <div id="sidebar" class="sidebar">
     <div class="text-center mb-4">
-        <h4 style="font-weight: 800; color: var(--primary);">FINI <span style="color: var(--secondary);">DASH</span></h4>
-        <p class="text-muted small">Sales Intelligence v2.0</p>
+      <h4 style="font-weight:800; color:var(--primary)">FINI <span style="color:var(--secondary)">DASH</span></h4>
+      <p class="text-muted small">Sales Intelligence v2.0</p>
     </div>
-    
+
     <div class="filters">
-      <div class="mb-4">
+      <div class="mb-3">
         <label class="form-label small fw-bold">PERÍODO (ANO)</label>
         <select id="filter-ano" multiple></select>
       </div>
-
-      <div class="mb-4">
+      <div class="mb-3">
         <label class="form-label small fw-bold">PERÍODO (MÊS)</label>
         <select id="filter-mes" multiple></select>
       </div>
-
-      <div class="mb-4">
+      <div class="mb-3">
         <label class="form-label small fw-bold">GERÊNCIA</label>
         <select id="filter-gerente" multiple></select>
       </div>
-      <div class="mb-4">
+      <div class="mb-3">
         <label class="form-label small fw-bold">SUPERVISÃO</label>
         <select id="filter-supervisor" multiple></select>
       </div>
-      <div class="mb-4">
+      <div class="mb-3">
         <label class="form-label small fw-bold">VENDEDOR</label>
         <select id="filter-vendedor" multiple></select>
       </div>
-
-      <div class="mb-4">
+      <div class="mb-3">
         <label class="form-label small fw-bold">GRUPO</label>
         <select id="filter-grupo" multiple></select>
       </div>
-      
-      <button id="btn-reset" class="btn btn-light w-100 border mt-2" style="border-radius: 10px;">
-        <i class="fa-solid fa-rotate-left me-2"></i>Limpar Filtros
-      </button>
+
+      <button id="btn-reset" class="btn btn-light w-100 border mt-2" style="border-radius:10px;"><i class="fa-solid fa-rotate-left me-2"></i>Limpar Filtros</button>
     </div>
   </div>
 
   <div class="main-content">
-    <header class="d-flex justify-content-between align-items-center mb-5">
-        <div>
-            <h2 class="fw-bold m-0">Performance de Vendas</h2>
-            <p class="text-muted">Análise dinâmica de faturamento e positivação</p>
-        </div>
-        <div id="last-update" class="badge bg-white text-dark border p-2" style="border-radius: 8px;">
-            <i class="fa-regular fa-calendar me-2"></i> Dados Atualizados
-        </div>
+    <header class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="fw-bold m-0">Performance de Vendas</h2>
+        <p class="text-muted">Análise dinâmica de faturamento e positivação</p>
+      </div>
+      <div id="last-update" class="badge bg-white text-dark border p-2" style="border-radius:8px;"><i class="fa-regular fa-calendar me-2"></i> Dados</div>
     </header>
 
-    <!-- Botão para baixar relatório -->
-    <button id="btn-download" class="btn btn-primary mb-4">
-      <i class="fa-solid fa-download me-2"></i>BAIXAR RELATÓRIO
-    </button>
+    <button id="btn-download" class="btn btn-primary mb-4"><i class="fa-solid fa-download me-2"></i>BAIXAR RELATÓRIO</button>
 
-    <!-- Métricas Principais (OBS: removido cartão "Média p/ Nota") -->
-    <div class="row g-4 mb-5">
+    <div class="row g-4 mb-4">
       <div class="col-md-4">
         <div class="metric-card">
-          <i class="fa-solid fa-chart-line metric-icon"></i>
           <div class="metric-label">Faturamento Total</div>
           <div class="metric-value" id="total-faturamento">R$ 0,00</div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="metric-card alt">
-          <i class="fa-solid fa-users metric-icon"></i>
           <div class="metric-label">Positivação Média (6 meses)</div>
           <div class="metric-value" id="media-positivacao">0</div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="metric-card">
-          <i class="fa-solid fa-ticket metric-icon"></i>
           <div class="metric-label">Ticket Médio</div>
           <div class="metric-value" id="ticket-medio">R$ 0,00</div>
         </div>
       </div>
     </div>
 
-    <!-- Gráfico de Evolução -->
     <div class="glass-panel">
-      <div class="section-title">
-        <i class="fa-solid fa-arrow-trend-up text-primary"></i> Evolução Mensal MoM
-      </div>
-      <div id="evolucao-chart" style="height:400px;"></div>
+      <div class="section-title mb-3"><i class="fa-solid fa-arrow-trend-up text-primary me-2"></i> Evolução Mensal MoM</div>
+      <div id="evolucao-chart" style="height:360px;"></div>
     </div>
 
-    <!-- Tabela de Vendedores -->
     <div class="glass-panel">
-      <div class="section-title">
-        <i class="fa-solid fa-ranking-star text-secondary"></i> Ranking de Performance por Vendedor
-      </div>
+      <div class="section-title mb-3"><i class="fa-solid fa-ranking-star text-secondary me-2"></i> Ranking de Performance por Vendedor</div>
       <div class="table-responsive">
         <table id="table-vendedores" class="table table-hover w-100">
           <thead>
@@ -222,46 +162,51 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
-(async function() {
-  const DATA_PATH = './Dados/fini_data.json';
-  const MONTHS_FIXED = 6; // dividir por 6 conforme solicitado
+(async function(){
+  const DATA_PATH = './dados/fini_data.json'; // certifique-se que a pasta no repo/deploy é 'dados' (minúsculo)
+  const MONTHS_FIXED = 6;
 
   let rawData = [];
   const choicesInstances = {};
-  const fmtCurrency = v => isNaN(v) ? 'R$ 0,00' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const fmtNumber = v => isNaN(v) ? '0' : v.toLocaleString('pt-BR');
+  let dataTable = null;
+  let currentRows = [];
 
-  // Carrega JSON
+  const fmtCurrency = v => isNaN(v) ? 'R$ 0,00' : v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+  // Carregar JSON
   try {
     const resp = await fetch(DATA_PATH);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
     rawData = await resp.json();
-  } catch (err) {
+  } catch(err) {
     console.error('Erro ao carregar JSON:', err);
-    alert('Erro ao carregar Dados/fini_data.json. Confirme que o JSON existe e que você está servindo via http://localhost:8000');
+    alert('Erro ao carregar ' + DATA_PATH + '. Confirme que o arquivo está no deploy e o caminho está correto.');
     return;
   }
 
-  // Enriquecer dados (datas e valores)
+  // Enriquecer dados
   rawData.forEach(r => {
-    const d = r['Emissão'] ? new Date(r['Emissão']) : null;
-    r._date = d;
-    r.Ano = d ? d.getFullYear() : null;
-    r.Mes = d ? (d.getMonth() + 1) : null;
-    r.Mes_Ano = d ? d.toISOString().slice(0,7) : null; // YYYY-MM
+    r._date = r.Emissão ? new Date(r.Emissão) : null;
+    r.Ano = r._date ? r._date.getFullYear() : null;
+    r.Mes = r._date ? (r._date.getMonth()+1) : null;
+    r.Mes_Ano = r._date ? r.Emissão.slice(0,7) : null; // YYYY-MM (supondo Emissão = YYYY-MM-DD)
     r.VlrTotal = Number(r['Vlr. Total'] || 0);
+    // garantir chave de CNPJ/CPF limpa
+    r.Cnpj_CPF = r.Cnpj_CPF ? String(r.Cnpj_CPF).trim() : null;
+    // garantir nome vendedor
+    r['Nome Vendedor'] = r['Nome Vendedor'] ? String(r['Nome Vendedor']).trim() : '';
+    r.Vendedor = r.Vendedor ? String(r.Vendedor).trim() : '';
   });
 
-  // util: uniq + ordenação
-  const uniqSorted = (arr, numeric = false) => {
-    const s = [...new Set(arr.filter(x => x !== null && x !== undefined))];
+  // utils
+  const uniqSorted = (arr, numeric=false) => {
+    const s = [...new Set(arr.filter(x => x !== null && x !== undefined && x !== ''))];
     return s.sort((a,b) => numeric ? a - b : (''+a).localeCompare(''+b));
   };
 
-  // Helper para inicializar Choices.js
-  function initChoices(id, values) {
+  function initChoices(id, values, numeric=false) {
     const el = document.getElementById(id);
-    if (!el) return;
+    if(!el) return;
     el.innerHTML = '';
     values.forEach(v => {
       const opt = document.createElement('option');
@@ -277,97 +222,91 @@
     el.addEventListener('change', updateDashboard);
   }
 
-  // Popular filtros (ordem: ano, mes, gerencia, supervisao, vendedor, grupo)
-  initChoices('filter-ano', uniqSorted(rawData.map(r => r.Ano).filter(x => x), true));
-  initChoices('filter-mes', uniqSorted(rawData.map(r => r.Mes).filter(x => x), true));
+  // Popular filtros (ano, mes, gerencia, supervisao, vendedor, grupo)
+  initChoices('filter-ano', uniqSorted(rawData.map(r => r.Ano).filter(x => x), true), true);
+  initChoices('filter-mes', uniqSorted(rawData.map(r => r.Mes).filter(x => x), true), true);
   initChoices('filter-gerente', uniqSorted(rawData.map(r => r.GERENTE)));
   initChoices('filter-supervisor', uniqSorted(rawData.map(r => r.SUPERVISOR)));
   initChoices('filter-vendedor', uniqSorted(rawData.map(r => r['Nome Vendedor'])));
   initChoices('filter-grupo', uniqSorted(rawData.map(r => r.Grupo)));
 
-  // mostrar hora de carregamento
+  // atualizar badge de carregamento
   const lastUpdateEl = document.getElementById('last-update');
-  if (lastUpdateEl) lastUpdateEl.innerText = 'Dados carregados: ' + new Date().toLocaleString();
+  if(lastUpdateEl) lastUpdateEl.innerText = 'Dados carregados: ' + new Date().toLocaleString();
 
-  let dataTable = null;
-  let currentRows = [];
-
-  function updateDashboard() {
-    // valores selecionados
+  function updateDashboard(){
     const getVals = id => choicesInstances[id] ? choicesInstances[id].getValue(true) : [];
-    const fAno = getVals('filter-ano'), fMes = getVals('filter-mes'), fGrupo = getVals('filter-grupo'),
-          fGer = getVals('filter-gerente'), fSup = getVals('filter-supervisor'), fVen = getVals('filter-vendedor');
+    const fAno = getVals('filter-ano'), fMes = getVals('filter-mes'),
+          fGer = getVals('filter-gerente'), fSup = getVals('filter-supervisor'),
+          fVen = getVals('filter-vendedor'), fGrupo = getVals('filter-grupo');
 
-    // aplicar filtros
+    // Aplicar filtros
     const df = rawData.filter(r => {
-      if (fAno.length && !fAno.includes(String(r.Ano))) return false;
-      if (fMes.length && !fMes.includes(String(r.Mes))) return false;
-      if (fGrupo.length && !fGrupo.includes(r.Grupo)) return false;
-      if (fGer.length && !fGer.includes(r.GERENTE)) return false;
-      if (fSup.length && !fSup.includes(r.SUPERVISOR)) return false;
-      if (fVen.length && !fVen.includes(r['Nome Vendedor'])) return false;
+      if(fAno.length && !fAno.includes(String(r.Ano))) return false;
+      if(fMes.length && !fMes.includes(String(r.Mes))) return false;
+      if(fGer.length && !fGer.includes(r.GERENTE)) return false;
+      if(fSup.length && !fSup.includes(r.SUPERVISOR)) return false;
+      if(fVen.length && !fVen.includes(r['Nome Vendedor'])) return false;
+      if(fGrupo.length && !fGrupo.includes(r.Grupo)) return false;
       return true;
     });
 
     // CARDS
-    const totalVenda = df.reduce((s, r) => s + (r.VlrTotal || 0), 0);
-    const uniqueNF = [...new Set(df.map(r => r.NF).filter(x => x))].length;
+    const totalVenda = df.reduce((s,r)=> s + (r.VlrTotal||0), 0);
+    const uniqueNF_len = [...new Set(df.map(r=> r.NF).filter(x=>x))].length;
     const mediaMensalTotal = totalVenda / MONTHS_FIXED;
 
-    // Positivação média conforme regra: somar contagem distinta por mês e dividir por 6
+    // Positivação média: somar contagem distinta por mês e dividir por 6
     const monthMap = {};
     df.forEach(r => {
       const m = r.Mes_Ano || 'unknown';
-      if (!monthMap[m]) monthMap[m] = new Set();
-      if (r.Cnpj_CPF) monthMap[m].add(r.Cnpj_CPF);
+      if(!monthMap[m]) monthMap[m] = new Set();
+      if(r.Cnpj_CPF) monthMap[m].add(r.Cnpj_CPF);
     });
-    const somaDistinctMeses = Object.values(monthMap).reduce((acc, s) => acc + s.size, 0);
+    const somaDistinctMeses = Object.values(monthMap).reduce((acc,s)=> acc + s.size, 0);
     const mediaPositivacao = somaDistinctMeses / MONTHS_FIXED;
 
-    // atualizar DOM dos cards (preservando ids e layout)
-    const elTotal = document.getElementById('total-faturamento');
-    const elMediaPos = document.getElementById('media-positivacao');
-    const elTicket = document.getElementById('ticket-medio');
-    if (elTotal) elTotal.innerText = fmtCurrency(totalVenda);
-    if (elMediaPos) elMediaPos.innerText = Math.round(mediaPositivacao);
-    if (elTicket) elTicket.innerText = fmtCurrency(uniqueNF ? (totalVenda / uniqueNF) : 0);
+    // atualizar cards
+    document.getElementById('total-faturamento').innerText = fmtCurrency(totalVenda);
+    document.getElementById('media-positivacao').innerText = Math.round(mediaPositivacao);
+    document.getElementById('ticket-medio').innerText = fmtCurrency(uniqueNF_len ? (totalVenda / uniqueNF_len) : 0);
 
-    // GRÁFICO EVOLUÇÃO (por mês)
+    // Evolução mensal
     const evoMap = {};
     df.forEach(r => {
       const m = r.Mes_Ano || 'unknown';
-      if (!evoMap[m]) evoMap[m] = { v: 0, c: new Set() };
+      if(!evoMap[m]) evoMap[m] = {v:0, c: new Set()};
       evoMap[m].v += (r.VlrTotal || 0);
-      if (r.Cnpj_CPF) evoMap[m].c.add(r.Cnpj_CPF);
+      if(r.Cnpj_CPF) evoMap[m].c.add(r.Cnpj_CPF);
     });
     const months = Object.keys(evoMap).sort();
     const evoTotals = months.map(m => evoMap[m].v);
     const evoPos = months.map(m => evoMap[m].c.size);
 
-    const tracePos = { x: months, y: evoPos, name: 'Positivação (clientes)', type: 'bar', marker: { color: '#fbcfe8' } };
-    const traceVenda = { x: months, y: evoTotals, name: 'Vendas (R$)', type: 'scatter', mode: 'lines+markers', yaxis: 'y2', line: { color: '#6366f1' } };
+    const tracePos = { x: months, y: evoPos, name: 'Positivação (clientes)', type: 'bar', marker:{color:'#06b6d4'} };
+    const traceVenda = { x: months, y: evoTotals, name: 'Vendas (R$)', type: 'scatter', mode:'lines+markers', yaxis:'y2', line:{color:'#6366f1'} };
 
     Plotly.newPlot('evolucao-chart', [tracePos, traceVenda], {
-      margin: { t: 10, b: 60, l: 60, r: 60 },
-      xaxis: { title: 'Mês/Ano' },
-      yaxis: { title: 'Clientes' },
-      yaxis2: { title: 'Vendas (R$)', overlaying: 'y', side: 'right' },
-      legend: { orientation: 'h', y: -0.2 }
-    }, { responsive: true, displayModeBar: false });
+      margin:{t:10,b:60,l:60,r:60},
+      xaxis:{title:'Mês/Ano'},
+      yaxis:{title:'Clientes'},
+      yaxis2:{title:'Vendas (R$)', overlaying:'y', side:'right'},
+      legend:{orientation:'h', y:-0.2}
+    }, {responsive:true,displayModeBar:false});
 
-    // TABELA: ranking por vendedor
+    // Ranking por vendedor (agregação)
     const vendMap = {};
     df.forEach(r => {
       const name = r['Nome Vendedor'] || 'SEM NOME';
-      if (!vendMap[name]) vendMap[name] = { cod: r.Vendedor, sup: r.SUPERVISOR, ger: r.GERENTE, total: 0, cnpjSet: new Set() };
+      if(!vendMap[name]) vendMap[name] = { cod: r.Vendedor || '', sup: r.SUPERVISOR || '', ger: r.GERENTE || '', total:0, cnpjSet: new Set() };
       vendMap[name].total += (r.VlrTotal || 0);
-      if (r.Cnpj_CPF) vendMap[name].cnpjSet.add(r.Cnpj_CPF);
+      if(r.Cnpj_CPF) vendMap[name].cnpjSet.add(r.Cnpj_CPF);
     });
 
     const rows = Object.keys(vendMap).map(name => {
       const v = vendMap[name];
-      const totalPositivacao = v.cnpjSet.size; // contagem distinta total de Cnpj_CPF para o vendedor (todos meses)
-      const mediaMensalVenda = v.total / MONTHS_FIXED; // média fixa /6
+      const totalPositivacao = v.cnpjSet.size; // contagem distinta total (todos meses)
+      const mediaMensalVenda = v.total / MONTHS_FIXED;
       return {
         cod: v.cod || '',
         vendedor: name,
@@ -380,12 +319,10 @@
       };
     });
 
-    rows.sort((a, b) => b.totalVenda - a.totalVenda);
-
-    // salvar linhas atuais para exportação
+    rows.sort((a,b) => b.totalVenda - a.totalVenda);
     currentRows = rows;
 
-    // preencher tabela
+    // Preencher tabela
     const tbody = $('#table-vendedores tbody');
     tbody.empty();
     rows.forEach(r => {
@@ -401,58 +338,47 @@
       </tr>`);
     });
 
-    if (dataTable) dataTable.destroy();
+    if(dataTable) dataTable.destroy();
     dataTable = $('#table-vendedores').DataTable({
       pageLength: 10,
       order: [[4, 'desc']],
       language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
       dom: 'tip'
     });
-  }
+  } // end updateDashboard
 
-  // botão reset
-  const btnReset = document.getElementById('btn-reset');
-  if (btnReset) {
-    btnReset.addEventListener('click', () => {
+  // Inicialização de botões e choices
+  function setupUI(){
+    // botão reset
+    document.getElementById('btn-reset').addEventListener('click', ()=>{
       Object.values(choicesInstances).forEach(c => c.removeActiveItems?.());
       updateDashboard();
     });
+
+    // botão download (gera excel com a tabela atual)
+    document.getElementById('btn-download').addEventListener('click', ()=>{
+      if(!currentRows.length){ alert('Nenhum dado para exportar.'); return; }
+      const ws_data = [['Cod','Vendedor','Supervisor','Gerente','Total Venda','Positivação','Média Mensal','Posit. Média']];
+      currentRows.forEach(r => {
+        ws_data.push([ r.cod, r.vendedor, r.supervisor, r.gerente, r.totalVenda, r.totalPos, r.mediaMensalVenda, r.positMedia ]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Ranking Vendedores');
+      XLSX.writeFile(wb, 'relatorio_fini_vendedores.xlsx');
+    });
+
+    // menu mobile
+    const menuBtn = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    function toggleMenu(){ sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
+    menuBtn.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
   }
 
-  // botão baixar relatório Excel
-  const btnDownload = document.getElementById('btn-download');
-  btnDownload.addEventListener('click', () => {
-    if (!currentRows.length) {
-      alert('Nenhum dado para exportar.');
-      return;
-    }
-    // Criar worksheet e workbook
-    const ws_data = [
-      ['Cod', 'Vendedor', 'Supervisor', 'Gerente', 'Total Venda', 'Positivação', 'Média Mensal', 'Posit. Média']
-    ];
-    currentRows.forEach(r => {
-      ws_data.push([
-        r.cod,
-        r.vendedor,
-        r.supervisor,
-        r.gerente,
-        r.totalVenda,
-        r.totalPos,
-        r.mediaMensalVenda,
-        r.positMedia
-      ]);
-    });
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Ranking Vendedores');
-
-    // Gerar arquivo e disparar download
-    XLSX.writeFile(wb, 'relatorio_fini_vendedores.xlsx');
-  });
-
-  // primeira carga
+  setupUI();
   updateDashboard();
-
 })();
 </script>
 </body>
